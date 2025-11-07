@@ -42,16 +42,29 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _format_section(label: str, count: int, skipped: int, target: Path) -> str:
+    plural = "s" if count != 1 else ""
+    section = f"{label}: installed {count} file{plural} into {target}"
+    if skipped:
+        skipped_plural = "s" if skipped != 1 else ""
+        section += f" ({skipped} file{skipped_plural} skipped)"
+    return section
+
+
 def _format_init_summary(result: InitResult) -> str:
-    created_count = len(result.created)
-    skipped_count = len(result.skipped)
-    parts = [
-        f"Installed {created_count} template{'s' if created_count != 1 else ''} ",
-        f"into {result.target_dir}",
-    ]
-    if skipped_count:
-        parts.append(f" ({skipped_count} file{'s' if skipped_count != 1 else ''} skipped)")
-    return "".join(parts)
+    command_section = _format_section(
+        "Claude commands",
+        len(result.commands.created),
+        len(result.commands.skipped),
+        result.commands.target_dir,
+    )
+    nspa_section = _format_section(
+        ".nspa bundle",
+        len(result.nspa.created),
+        len(result.nspa.skipped),
+        result.nspa.target_dir,
+    )
+    return f"{command_section}; {nspa_section}"
 
 
 def main(argv: Sequence[str] | None = None) -> int:

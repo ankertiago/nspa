@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import shutil
 from dataclasses import dataclass
-from importlib import resources
 from pathlib import Path
 
 
@@ -13,47 +12,43 @@ class NspaError(RuntimeError):
 
 
 @dataclass(slots=True)
-class InitResult:
-    """Result data for the init command."""
+class CopyReport:
+    """Tracks copy results for a given destination directory."""
 
     target_dir: Path
     created: list[Path]
     skipped: list[Path]
 
 
-TEMPLATE_DIRNAME = "templates"
+@dataclass(slots=True)
+class InitResult:
+    """Result data for the init command."""
+
+    commands: CopyReport
+    nspa: CopyReport
+
+
+PACKAGE_ROOT = Path(__file__).resolve().parent
+CLAUDE_COMMANDS_DIR = PACKAGE_ROOT / "data" / "claude_commands"
+NSPA_BUNDLE_DIR = PACKAGE_ROOT / "data" / "nspa"
 TEMPLATE_SUFFIX = ".md"
 
 
-def _resolve_template_dir() -> Path:
-    root = resources.files("nspa_cli") / TEMPLATE_DIRNAME
-    if not root.is_dir():
-        raise NspaError("Template directory is missing from the installation.")
-    return Path(root)
+def _copy_command_templates(destination: Path, *, force: bool) -> CopyReport:
+    if not CLAUDE_COMMANDS_DIR.is_dir():
+        raise NspaError("Command templates are missing from the installation.")
 
-
-def init_project(project_root: Path, *, force: bool = False) -> InitResult:
-    """Copy template files into the target project's `.claude/commands` directory."""
-
-    if not project_root:
-        raise NspaError("A project path must be provided.")
-
-    destination = project_root.expanduser().resolve()
-    destination.mkdir(parents=True, exist_ok=True)
-
-    commands_dir = destination / ".claude" / "commands"
-    commands_dir.mkdir(parents=True, exist_ok=True)
-
-    template_dir = _resolve_template_dir()
-    template_files = sorted(template_dir.glob(f"*{TEMPLATE_SUFFIX}"))
+    template_files = sorted(CLAUDE_COMMANDS_DIR.glob(f"*{TEMPLATE_SUFFIX}"))
     if not template_files:
-        raise NspaError("No template files were bundled with the installation.")
+        raise NspaError("No command templates were bundled with the installation.")
+
+    destination.mkdir(parents=True, exist_ok=True)
 
     created: list[Path] = []
     skipped: list[Path] = []
 
     for source in template_files:
-        target = commands_dir / source.name
+        target = destination / source.name
         if target.exists() and not force:
             skipped.append(target)
             continue
@@ -62,6 +57,55 @@ def init_project(project_root: Path, *, force: bool = False) -> InitResult:
         created.append(target)
 
     if not created and not skipped:
-        raise NspaError("No templates were processed. Nothing to do.")
+        raise NspaError("No command templates were processed. Nothing to do.")
 
-    return InitResult(target_dir=commands_dir, created=created, skipped=skipped)
+    return CopyReport(target_dir=destination, created=created, skipped=skipped)
+
+
+def _copy_nspa_bundle(destination: Path, *, force: bool) -> CopyReport:
+    if not NSPA_BUNDLE_DIR.is_dir():
+        raise NspaError("NSPA bundle is missing from the installation.")
+
+    destination.mkdir(parents=True, exist_ok=True)
+
+    created: list[Path] = []
+    skipped: list[Path] = []
+
+    for source in sorted(NSPA_BUNDLE_DIR.rglob("*")):
+        relative = source.relative_to(NSPA_BUNDLE_DIR)
+        target = destination / relative
+
+        if source.is_dir():
+            target.mkdir(parents=True, exist_ok=True)
+            continue
+
+        if target.exists() and not force:
+            skipped.append(target)
+            continue
+
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, target)
+        created.append(target)
+
+    if not created and not skipped:
+        raise NspaError("No NSPA files were bundled with the installation.")
+
+    return CopyReport(target_dir=destination, created=created, skipped=skipped)
+
+
+def init_project(project_root: Path, *, force: bool = False) -> InitResult:
+    """Copy .claude templates and the .nspa bundle into the target project."""
+
+    if not project_root:
+        raise NspaError("A project path must be provided.")
+
+    destination = project_root.expanduser().resolve()
+    destination.mkdir(parents=True, exist_ok=True)
+
+    commands_dir = destination / ".claude" / "commands"
+    nspa_dir = destination / ".nspa"
+
+    commands_report = _copy_command_templates(commands_dir, force=force)
+    nspa_report = _copy_nspa_bundle(nspa_dir, force=force)
+
+    return InitResult(commands=commands_report, nspa=nspa_report)
