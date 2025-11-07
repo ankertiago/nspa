@@ -1,7 +1,3 @@
-如何更新脚本呢？
-- 这是安装
-uv tool install nspa-cli --from git+https://github.com/ankertiago/nspa.git
-- 更新：
-uv tool update nspa-cli --from git+https://github.com/ankertiago/nspa.git
-- 如果 uv 版本较老，可以用强制重装：
-uv tool install nspa-cli --from git+https://github.com/ankertiago/nspa.git --reinstall
+新功能需求迭代又来了？
+（1）init命令之后把，把nspa的文件夹（不包含AA文件夹及其内容）和文件放到项目的根目录下的.nspa里面。
+（2）内置的 Claude commands 的文件被我放在了nspa的AA文件夹里面。你换一下读取的目录。也就是你需把：nspa的AA的文件全部放在.claude/commands里面去，还要给文件名字加上前缀nspa. 

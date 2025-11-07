@@ -17,8 +17,8 @@ nspa init .
 
 运行后会：
 
-- 创建/更新 `.claude/commands`，将所有 `*.md` 模板复制进去；
-- 创建 `.nspa` 目录，并保留 `memory/`, `templates/`, `scripts/` 的子目录结构与文件；
+- 创建/更新 `.claude/commands`，把 `AA/` 中的模板以 `nspa.<name>.md` 的形式复制进去；
+- 创建 `.nspa` 目录，复制除 `AA/` 以外的所有 NSPA 资源（memory/templates/scripts 等）并保留子目录结构；
 - 通过 `--force` 可以覆盖目标项目中已存在的同名文件。
 
 ## Update

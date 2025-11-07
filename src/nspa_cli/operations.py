@@ -29,8 +29,8 @@ class InitResult:
 
 
 PACKAGE_ROOT = Path(__file__).resolve().parent
-CLAUDE_COMMANDS_DIR = PACKAGE_ROOT / "data" / "claude_commands"
 NSPA_BUNDLE_DIR = PACKAGE_ROOT / "data" / "nspa"
+CLAUDE_COMMANDS_DIR = NSPA_BUNDLE_DIR / "AA"
 TEMPLATE_SUFFIX = ".md"
 
 
@@ -48,7 +48,11 @@ def _copy_command_templates(destination: Path, *, force: bool) -> CopyReport:
     skipped: list[Path] = []
 
     for source in template_files:
-        target = destination / source.name
+        target_name = source.name
+        if not target_name.startswith("nspa."):
+            target_name = f"nspa.{target_name}"
+
+        target = destination / target_name
         if target.exists() and not force:
             skipped.append(target)
             continue
@@ -73,6 +77,10 @@ def _copy_nspa_bundle(destination: Path, *, force: bool) -> CopyReport:
 
     for source in sorted(NSPA_BUNDLE_DIR.rglob("*")):
         relative = source.relative_to(NSPA_BUNDLE_DIR)
+        if not relative.parts:
+            continue
+        if relative.parts[0] == "AA":
+            continue
         target = destination / relative
 
         if source.is_dir():
