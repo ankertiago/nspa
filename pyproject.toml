@@ -1,0 +1,28 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "nspa-cli"
+version = "0.1.0"
+description = "Bootstrap .claude command templates for projects using the NSPA workflow."
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [{ name = "ankertiago" }]
+license = { text = "MIT" }
+keywords = ["claude", "cli", "templates"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "License :: OSI Approved :: MIT License",
+    "Environment :: Console",
+]
+
+dependencies = []
+
+[project.scripts]
+nspa = "nspa_cli.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/nspa_cli"]
