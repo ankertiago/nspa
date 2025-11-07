@@ -1,0 +1,32 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+.env/
+env/
+
+# Tooling caches
+.pytest_cache/
+.mypy_cache/
+.dmypy.json
+coverage.xml
+.coverage
+
+# OS / Editor
+.DS_Store
+.idea/
+.vscode/
+
+# Project-specific
+sandbox_project/
+.claude/
